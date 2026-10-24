@@ -219,6 +219,17 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
 .logo,.herologo,h1,h2,h3,.btn,.seg b,.stage,.notes h4,th,.name,.mood .row,.sccard .sct b{letter-spacing:.04em}
 .logo{font-size:17px}
 .hbtns{display:flex;gap:8px;align-items:center}
+@media(max-width:520px){
+ header.top{flex-wrap:wrap;row-gap:8px}
+ .hbtns{flex-wrap:wrap;gap:6px}
+ .hbtns .chip{font-size:11px;padding:3px 7px}
+}
+@media(orientation:landscape) and (max-height:520px) and (max-width:999px){
+ .wrap{padding:8px 12px}
+ .game{grid-template-columns:minmax(300px,370px) 1fr;gap:12px}
+ .scene{top:8px;margin:0}
+ header.top{padding:6px 14px}
+}
 .mute{cursor:pointer}
 .mute[aria-pressed="false"]{opacity:.65}
 .stagehint{font-size:14px;color:#5a4a2b;background:#fff4c8;border:3px solid var(--ink);border-left:8px solid var(--brass);padding:8px 10px}
@@ -226,7 +237,7 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
 .hero{display:grid;grid-template-columns:minmax(220px,300px) 1fr;gap:20px;align-items:center}
 .heroshop{aspect-ratio:4/4.6}
 .mobonly{display:none}
-@media(max-width:860px){
+@media(max-width:860px),(orientation:landscape) and (max-height:520px) and (max-width:999px){
  .scene{position:sticky;top:0;z-index:30;margin:0 -2px}
  .shop{height:150px;aspect-ratio:auto;max-width:none;width:100%;margin:0;box-shadow:3px 3px 0 #0b0f17;border-width:3px}
  .pwrap{left:8px;transform:none;height:100%}
