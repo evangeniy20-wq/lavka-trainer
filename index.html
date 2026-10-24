@@ -2187,6 +2187,23 @@ function sfx(n){SND.play(n)}
   b.onclick=()=>{SND.toggle();up();sfx("click")};
   document.addEventListener("click",e=>{const x=e.target.closest&&e.target.closest("button");if(x&&x.id!=="mute")sfx("click")},true)})();
 
+
+(function(){
+ const m=$("#menu"),bg=$("#burger"),hm=$("#mhome");if(!m||!bg)return;
+ let armed=0;
+ const reset=()=>{armed=0;hm.textContent="В главное меню"};
+ const open=()=>{m.hidden=false;window.MENU_OPEN=true;bg.setAttribute("aria-expanded","true");reset()};
+ const close=()=>{m.hidden=true;window.MENU_OPEN=false;bg.setAttribute("aria-expanded","false");reset()};
+ bg.onclick=()=>m.hidden?open():close();
+ $("#mclose").onclick=close;
+ m.addEventListener("click",e=>{if(e.target===m)close()});
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!m.hidden)close()});
+ hm.onclick=()=>{
+  const inGame=!!document.querySelector(".game");
+  if(inGame&&!armed){armed=1;hm.textContent="Выйти? Прогресс пропадёт — нажмите ещё раз";return}
+  close();stopTimer();screenStart()};
+})();
+
 /* ============ ЭКРАНЫ ============ */
 const app=$("#app");
 function mount(node){app.replaceChildren(node);window.scrollTo(0,0)}
