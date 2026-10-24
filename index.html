@@ -2182,7 +2182,7 @@ const SND=(()=>{let ctx=null,muted=false;try{muted=localStorage.getItem("lavka_m
     great:()=>tone(660,0,.06,"sine",.025),ok:()=>tone(520,0,.06,"sine",.02),
     bad:()=>tone(240,0,.08,"sine",.025),crit:()=>tone(200,0,.1,"sine",.03),
     coin:()=>tone(880,0,.05,"sine",.02),A:()=>{},B:()=>{},C:()=>{},D:()=>{}};
-  return{play(n){if(muted||!P[n])return;try{P[n]()}catch(e){}},get muted(){return muted},
+  return{play(n){if(muted||!P[n])return;try{P[n]()}catch(e){}},get muted(){return muted},ctx(){return ac()},
     toggle(){muted=!muted;try{localStorage.setItem("lavka_mute",muted?"1":"0")}catch(e){}return muted}}})();
 function sfx(n){SND.play(n)}
 (function(){const b=$("#mute");if(!b)return;const up=()=>{b.textContent=SND.muted?"Звук: выкл":"Звук: вкл";b.setAttribute("aria-pressed",String(!SND.muted))};up();
@@ -2200,7 +2200,7 @@ const MUS=(()=>{
  const PENT=[523.25,587.33,659.25,783.99,880,1046.5];
  function init(){
   if(ctx)return true;
-  try{ctx=new (window.AudioContext||window.webkitAudioContext)()}catch(e){return false}
+  ctx=SND.ctx();if(!ctx)return false;
   master=ctx.createGain();master.gain.value=0;master.connect(ctx.destination);
   const len=ctx.sampleRate*2.6,buf=ctx.createBuffer(2,len,ctx.sampleRate);
   for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6)}
@@ -2216,14 +2216,14 @@ const MUS=(()=>{
   o.start(t);o.stop(t+d+.6)}
  function bar(t,i){
   const k=i%4,ch=CH[k];
-  ch.forEach((f,j)=>{note(f*2,t+j*.02,BEAT*4.2,"triangle",.05,.9,1);note(f*2.003,t,BEAT*4.2,"sine",.03,1.1,1)});
-  note(BASS[k],t,BEAT*3.6,"sine",.11,.05,0);
+  ch.forEach((f,j)=>{note(f*2,t+j*.02,BEAT*4.2,"triangle",.09,.9,1);note(f*2.003,t,BEAT*4.2,"sine",.06,1.1,1)});
+  note(BASS[k],t,BEAT*3.6,"sine",.16,.05,0);
   for(let b=0;b<8;b++){
    if(Math.random()<.55){
     const f=PENT[Math.floor(Math.random()*PENT.length)]*(Math.random()<.2?.5:1);
-    note(f,t+b*BEAT*.5+(Math.random()*.02),BEAT*1.4,"sine",.045+Math.random()*.02,.01,2)}}}
+    note(f,t+b*BEAT*.5+(Math.random()*.02),BEAT*1.4,"sine",.08+Math.random()*.03,.01,2)}}}
  function tick(){
-  if(!ctx||ctx.state!=="running")return;
+  if(!ctx)return;if(ctx.state!=="running"){try{ctx.resume()}catch(e){}return}
   while(nextT<ctx.currentTime+1.2){bar(nextT,step++);nextT+=BEAT*4}}
  function start(){
   if(!on||!init())return;
@@ -2233,9 +2233,9 @@ const MUS=(()=>{
   tick()}
  function stop(){if(!ctx)return;master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setTargetAtTime(0,ctx.currentTime,.25)}
  document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)ctx.resume()});
- const first=()=>{start();if(on&&ctx&&ctx.state==="running"){["pointerdown","touchend","keydown"].forEach(e=>document.removeEventListener(e,first,true))}};
- ["pointerdown","touchend","keydown"].forEach(e=>document.addEventListener(e,first,true));
- return{get on(){return on},get vol(){return vol},setVol(v){vol=v;try{localStorage.setItem("lavka_mvol",String(v))}catch(e){}if(ctx&&on)master.gain.setTargetAtTime(.9*vol*1.6,ctx.currentTime,.1)},toggle(){on=!on;try{localStorage.setItem("lavka_music",on?"1":"0")}catch(e){}if(on){start()}else stop();return on}}})();
+ const first=()=>{if(!on)return;start();try{if(ctx&&ctx.state!=="running")ctx.resume()}catch(e){}};
+ ["click","touchend","pointerup","keydown"].forEach(e=>document.addEventListener(e,first,true));
+ return{get on(){return on},get master(){return master},get vol(){return vol},setVol(v){vol=v;try{localStorage.setItem("lavka_mvol",String(v))}catch(e){}if(ctx&&on)master.gain.setTargetAtTime(.9*vol*1.6,ctx.currentTime,.1)},toggle(){on=!on;try{localStorage.setItem("lavka_music",on?"1":"0")}catch(e){}if(on){start()}else stop();return on}}})();
 (function(){const b=$("#music");if(!b)return;const up=()=>{b.textContent=MUS.on?"Музыка: вкл":"Музыка: выкл";b.setAttribute("aria-pressed",String(MUS.on))};up();
  b.onclick=()=>{MUS.toggle();up()}})();
 (function(){
