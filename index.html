@@ -229,24 +229,38 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
  header.top .logo small{display:none}
 }
 @media(orientation:landscape) and (max-height:520px){
- header.top{padding:4px 14px}
- header.top .logo small{display:none}
- .wrap{max-width:none;padding:8px 14px}
- .game{grid-template-columns:minmax(230px,36%) 1fr;gap:12px}
- .scene{top:8px;height:calc(100vh - 68px);margin:0}
+ header.top{padding:3px 12px;gap:8px}
+ header.top .logo{display:none}
+ header.top{justify-content:flex-end}
+ .hbtns .chip{font-size:11px;padding:3px 8px}
+ .wrap{max-width:none;padding:6px 12px}
+ .game{grid-template-columns:minmax(230px,34%) 1fr;gap:10px}
+ .scene{top:6px;height:calc(100vh - 56px);margin:0}
  .scene .shop{aspect-ratio:auto;height:100%;min-height:0}
  .scene .mood{position:absolute;left:8px;right:8px;bottom:8px;z-index:4;padding:6px 8px;border-width:3px;box-shadow:inset 0 0 0 2px var(--brass)}
  .scene .mood .row{font-size:11px;margin-bottom:4px}
  .scene .hearts{gap:1px}
  .name{font-size:12px;padding:3px 8px}
  .nbtn{width:38px;height:38px;font-size:19px}
- .stagehint{font-size:calc(var(--fs,14px) - 1px)!important;padding:6px 8px}
- .bubble{font-size:var(--fs,14px);padding:8px 12px}
+ .dialog,.dialog.card,.card{padding:8px 10px;gap:6px}
+ .stage{font-size:11px}
+ .progress{height:6px;margin:2px 0}
+ .stagehint{font-size:calc(var(--fs,14px) - 2px)!important;padding:4px 8px;border-width:2px;border-left-width:6px}
+ .bubble{font-size:var(--fs,14px);padding:6px 10px;max-width:100%}
  .bubble.narr{font-size:calc(var(--fs,14px) - 1px)}
- .opt{font-size:var(--fs,14px);line-height:1.3;padding:.5em .8em;min-height:0}
- .dialog.card,.card{padding:12px}
+ .hint{font-size:calc(var(--fs,14px) - 2px);margin:0}
+ .opts{grid-template-columns:1fr 1fr;gap:6px}
+ .opt{font-size:var(--fs,14px);line-height:1.25;padding:.4em .6em;min-height:0;box-shadow:0 3px 0 var(--ink);border-width:2px}
+ .speech{display:none}
+ .mobonly{display:block!important}
 }
-@media(orientation:landscape) and (max-height:420px){.speech{display:none}}
+@media(orientation:landscape) and (max-height:340px){
+ .progress{display:none}
+ .dialog>.bubble.narr{display:none}
+ .stagehint{padding:2px 8px}
+ header.top{padding:2px 12px}
+ .scene{height:calc(100vh - 50px)}
+}
 .mute{cursor:pointer}
 .mute[aria-pressed="false"]{opacity:.65}
 .stagehint{font-size:14px;color:#5a4a2b;background:#fff4c8;border:3px solid var(--ink);border-left:8px solid var(--brass);padding:8px 10px}
@@ -2576,9 +2590,9 @@ screenStart();
    if(!phone()||!document.querySelector(".game")){R.style.removeProperty("--fs");return}
    const land=matchMedia("(orientation:landscape)").matches;
    const max=land?15:16;let f=max;
-   const min=land?13:12;for(;f>=min;f--){
+   const min=land?11:12;for(;f>=min;f--){
     R.style.setProperty("--fs",f+"px");
-    const h=land?Math.max(document.querySelector(".game .dialog,.game .card")?.getBoundingClientRect().height||0,0)+60:R.scrollHeight;
+    const h=R.scrollHeight;
     if(h<=innerHeight+1)break;
    }
   }finally{busy=false}
