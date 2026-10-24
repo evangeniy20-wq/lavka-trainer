@@ -334,8 +334,6 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
 .mhead{display:flex;justify-content:space-between;align-items:center;font-family:var(--pix);font-size:16px;color:var(--ink)}
 .mpanel .chip{width:100%;text-align:left;padding:10px 12px;font-size:13px}
 .mhead .chip{width:auto;padding:4px 10px}
-.mvol{display:grid;gap:6px;font-size:14px;color:var(--ink)}
-.mvol input{width:100%;accent-color:#c2281e}
 .mpanel .btn{width:100%}
 @media(orientation:landscape) and (max-height:520px){.menu{padding:40px 12px 8px}.mpanel{max-height:calc(100vh - 48px);padding:10px;gap:8px}}
 
@@ -353,7 +351,7 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
   <div class="logo">Счастье<small>Тренажёр «Гость в лавке»</small></div>
   <div class="hbtns"><div class="chip" id="modeChip" hidden></div><button class="chip burger" id="burger" type="button" aria-label="Меню и настройки" aria-expanded="false">&#9776;</button></div>
 </header>
-<div class="menu" id="menu" hidden><div class="mpanel" role="dialog" aria-label="Настройки"><div class="mhead"><b>Меню</b><button class="chip" id="mclose" type="button" aria-label="Закрыть">&#10005;</button></div><button class="chip mute" id="music" type="button">Музыка</button><button class="chip mute" id="mute" type="button">Звук</button><label class="mvol">Громкость музыки<input type="range" id="mvol" min="0" max="100" step="5" value="60"></label><button class="btn red" id="mhome" type="button">В главное меню</button></div></div>
+<div class="menu" id="menu" hidden><div class="mpanel" role="dialog" aria-label="Настройки"><div class="mhead"><b>Меню</b><button class="chip" id="mclose" type="button" aria-label="Закрыть">&#10005;</button></div><button class="chip mute" id="mute" type="button">Звук</button><button class="btn red" id="mhome" type="button">В главное меню</button></div></div>
 <main class="wrap" id="app" aria-live="polite"></main>
 
 <script>
@@ -2187,73 +2185,7 @@ const SND=(()=>{let ctx=null,muted=false;try{muted=localStorage.getItem("lavka_m
 function sfx(n){SND.play(n)}
 (function(){const b=$("#mute");if(!b)return;const up=()=>{b.textContent=SND.muted?"Звук: выкл":"Звук: вкл";b.setAttribute("aria-pressed",String(!SND.muted))};up();
   b.onclick=()=>{SND.toggle();up();sfx("click")};
-  document.addEventListener("click",e=>{const x=e.target.closest&&e.target.closest("button");if(x&&x.id!=="mute"&&x.id!=="music")sfx("click")},true)})();
-
-
-/* ============ ФОНОВАЯ МУЗЫКА (генерируется в браузере, без файлов) ============ */
-const MUS=(()=>{
- let ctx=null,master=null,verb=null,dly=null,timer=null,nextT=0,step=0,on=true,started=false,vol=.6;
- try{on=localStorage.getItem("lavka_music")!=="0";const v=parseFloat(localStorage.getItem("lavka_mvol"));if(v>=0&&v<=1)vol=v}catch(e){}
- const BEAT=60/74;
- const CH=[[130.81,164.81,196,246.94],[110,130.81,164.81,196],[87.31,110,130.81,164.81],[98,123.47,146.83,164.81]];
- const BASS=[65.41,55,43.65,49];
- const PENT=[523.25,587.33,659.25,783.99,880,1046.5];
- function init(){
-  if(ctx)return true;
-  ctx=SND.ctx();if(!ctx)return false;
-  master=ctx.createGain();master.gain.value=0;master.connect(ctx.destination);
-  const len=ctx.sampleRate*2.6,buf=ctx.createBuffer(2,len,ctx.sampleRate);
-  for(let c=0;c<2;c++){const d=buf.getChannelData(c);for(let i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6)}
-  verb=ctx.createConvolver();verb.buffer=buf;const vg=ctx.createGain();vg.gain.value=.55;verb.connect(vg);vg.connect(master);
-  dly=ctx.createDelay(1);dly.delayTime.value=BEAT*.75;const fb=ctx.createGain();fb.gain.value=.34;
-  dly.connect(fb);fb.connect(dly);const dg=ctx.createGain();dg.gain.value=.5;dly.connect(dg);dg.connect(master);dg.connect(verb);
-  return true}
- function note(f,t,d,type,v,att,wet){
-  const o=ctx.createOscillator(),g=ctx.createGain(),lp=ctx.createBiquadFilter();
-  o.type=type;o.frequency.value=f;lp.type="lowpass";lp.frequency.value=type==="sine"?2400:1100;
-  g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+att);g.gain.setTargetAtTime(.0001,t+d*.6,d*.22);
-  o.connect(lp);lp.connect(g);g.connect(master);if(wet){g.connect(verb);if(wet>1)g.connect(dly)}
-  o.start(t);o.stop(t+d+.6)}
- function bar(t,i){
-  const k=i%4,ch=CH[k];
-  ch.forEach((f,j)=>{note(f*2,t+j*.02,BEAT*4.2,"triangle",.09,.9,1);note(f*2.003,t,BEAT*4.2,"sine",.06,1.1,1)});
-  note(BASS[k],t,BEAT*3.6,"sine",.16,.05,0);
-  for(let b=0;b<8;b++){
-   if(Math.random()<.55){
-    const f=PENT[Math.floor(Math.random()*PENT.length)]*(Math.random()<.2?.5:1);
-    note(f,t+b*BEAT*.5+(Math.random()*.02),BEAT*1.4,"sine",.08+Math.random()*.03,.01,2)}}}
- function tick(){
-  if(!ctx)return;if(ctx.state!=="running"){try{ctx.resume()}catch(e){}return}
-  while(nextT<ctx.currentTime+1.2){bar(nextT,step++);nextT+=BEAT*4}}
- function start(){
-  if(!on||!init())return;
-  if(ctx.state==="suspended")ctx.resume();
-  master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setTargetAtTime(.9*vol*1.6,ctx.currentTime,.8);
-  if(!started){started=true;nextT=ctx.currentTime+.15;timer=setInterval(tick,250)}
-  tick()}
- function stop(){if(!ctx)return;master.gain.cancelScheduledValues(ctx.currentTime);master.gain.setTargetAtTime(0,ctx.currentTime,.25)}
- document.addEventListener("visibilitychange",()=>{if(!ctx)return;if(document.hidden)ctx.suspend();else if(on)ctx.resume()});
- const first=()=>{if(!on)return;start();try{if(ctx&&ctx.state!=="running")ctx.resume()}catch(e){}};
- ["click","touchend","pointerup","keydown"].forEach(e=>document.addEventListener(e,first,true));
- return{get on(){return on},get master(){return master},get vol(){return vol},setVol(v){vol=v;try{localStorage.setItem("lavka_mvol",String(v))}catch(e){}if(ctx&&on)master.gain.setTargetAtTime(.9*vol*1.6,ctx.currentTime,.1)},toggle(){on=!on;try{localStorage.setItem("lavka_music",on?"1":"0")}catch(e){}if(on){start()}else stop();return on}}})();
-(function(){const b=$("#music");if(!b)return;const up=()=>{b.textContent=MUS.on?"Музыка: вкл":"Музыка: выкл";b.setAttribute("aria-pressed",String(MUS.on))};up();
- b.onclick=()=>{MUS.toggle();up()}})();
-(function(){
- const m=$("#menu"),bg=$("#burger"),hm=$("#mhome"),vol=$("#mvol");if(!m||!bg)return;
- let armed=0;
- const reset=()=>{armed=0;hm.textContent="В главное меню"};
- const open=()=>{m.hidden=false;window.MENU_OPEN=true;bg.setAttribute("aria-expanded","true");reset()};
- const close=()=>{m.hidden=true;window.MENU_OPEN=false;bg.setAttribute("aria-expanded","false");reset()};
- bg.onclick=()=>m.hidden?open():close();
- $("#mclose").onclick=close;
- m.addEventListener("click",e=>{if(e.target===m)close()});
- document.addEventListener("keydown",e=>{if(e.key==="Escape"&&!m.hidden)close()});
- vol.value=Math.round(MUS.vol*100);vol.oninput=()=>MUS.setVol(vol.value/100);
- hm.onclick=()=>{
-  const inGame=!!document.querySelector(".game");
-  if(inGame&&!armed){armed=1;hm.textContent="Выйти? Прогресс пропадёт — нажмите ещё раз";return}
-  close();stopTimer();screenStart()};
-})();
+  document.addEventListener("click",e=>{const x=e.target.closest&&e.target.closest("button");if(x&&x.id!=="mute")sfx("click")},true)})();
 
 /* ============ ЭКРАНЫ ============ */
 const app=$("#app");
