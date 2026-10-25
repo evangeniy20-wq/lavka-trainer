@@ -349,6 +349,8 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
 .best{margin:6px 0 0;padding:8px 10px;background:#eaf6df;border:3px solid var(--ink);border-left:8px solid var(--green);font-size:14px}
 .rsum{margin-bottom:10px}
 .it[hidden]{display:none}
+.stin{width:100%;box-sizing:border-box;padding:12px 14px;font:inherit;font-size:16px;border:2px solid #3a2a1c;border-radius:8px;background:#fff8ea;color:#2b1d12}
+.stin:focus{outline:3px solid #e0a63a}
 </style>
 </head>
 <body>
@@ -2129,9 +2131,57 @@ function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(
 
 /* ============ СОСТОЯНИЕ ============ */
 let S, mode="train";
+
+const STATS_URL="";
+let EXOK=false,EXC="";
+const stJ=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
+const stS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
+async function stPost(o,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||12000);
+  try{const r=await fetch(STATS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(o),signal:c.signal});return await r.json()}finally{clearTimeout(t)}}
+let stBusy=false;
+async function stFlush(){if(!STATS_URL||stBusy)return 0;stBusy=true;
+  try{let q=stJ("lavka_q",[]);
+    for(const it of q.slice()){
+      try{const r=await stPost(it);if(r.ok||r.err==="code"){q=q.filter(x=>x.id!==it.id);stS("lavka_q",q)}}catch(e){break}
+    }
+    return stJ("lavka_q",[]).length}
+  finally{stBusy=false}}
+function screenExamGate(next){
+  $("#modeChip").hidden=true;
+  const c=el("section","card center stack");
+  c.append(el("h2",null,"Экзамен"),el("p",null,"Результат уйдёт тренеру. Введите фамилию и имя и код экзамена, который выдал тренер."));
+  const f=document.createElement("input");f.className="stin";f.placeholder="Фамилия Имя";f.autocomplete="name";f.value=stJ("lavka_fio","");f.maxLength=60;
+  const k=document.createElement("input");k.className="stin";k.placeholder="Код экзамена";k.autocomplete="off";k.autocapitalize="off";k.maxLength=30;
+  const msg=el("p","hint");msg.setAttribute("role","status");
+  const go=el("button","btn red","Начать экзамен");go.type="button";
+  const back=el("button","btn ghost","Назад");back.type="button";back.onclick=screenStart;
+  go.onclick=async()=>{
+    const fio=f.value.trim().replace(/\s+/g," "),code=k.value.trim();
+    if(fio.split(" ").length<2||fio.length<5){msg.textContent="Напишите фамилию и имя в одну строку.";f.focus();return}
+    if(!code){msg.textContent="Введите код экзамена.";k.focus();return}
+    go.disabled=true;msg.textContent="Проверяю код…";
+    try{const r=await stPost({a:"check",code:code},8000);
+      if(!r.ok){msg.textContent="Код не подошёл. Уточните его у тренера.";go.disabled=false;return}
+    }catch(e){msg.textContent="";}
+    stS("lavka_fio",fio);EXOK=true;EXC=code;next()};
+  c.append(f,k,msg,go,back);mount(c);setTimeout(()=>f.focus(),50);
+}
+function stBox(w,rec){
+  const c=el("section","card stack");c.append(el("h3",null,"Отправка тренеру"));
+  const p=el("p","hint");const b=el("button","btn ghost","Отправить ещё раз");b.type="button";b.hidden=true;
+  async function go(){
+    b.hidden=true;p.textContent="Отправляю…";
+    const q=stJ("lavka_q",[]);if(!q.some(x=>x.id===rec.id)){q.push(rec);stS("lavka_q",q.slice(-30))}
+    let left=-1;try{left=await stFlush()}catch(e){}
+    const still=stJ("lavka_q",[]).some(x=>x.id===rec.id);
+    if(!still){p.textContent="Результат отправлен тренеру."}
+    else{p.textContent="Не удалось отправить. Результат сохранён на устройстве и уйдёт сам, когда появится связь.";b.hidden=false}
+  }
+  b.onclick=go;c.append(p,b);w.append(c);go();
+}
 function fresh(){
   S={mood:50,flags:new Set(),facts:{},basket:[],open:0,tags:{},hist:[],idx:0,node:"n1",
-     retry:{},disabled:{},orders:{},late:new Set(),crit:null,last:null,wrong:0};
+     retry:{},disabled:{},orders:{},late:new Set(),crit:null,last:null,wrong:0,t0:Date.now()};
 }
 function emo(m){return m>=75?"joy":m>=50?"interest":m>=25?"doubt":"angry"}
 
@@ -2218,13 +2268,13 @@ const TAGN={timeout:"Время на ответ вышло",stamp:"Штампы:
 function histLoad(){const h=store("lavka_hist");return Array.isArray(h)?h.filter(r=>SCENS.some(x=>x.id===r.sc)):[]}
 function histSave(r){const h=histLoad();h.unshift(r);store("lavka_hist",h.slice(0,40))}
 function miniScene(key,e,cls){const shop=el("div","shop "+(cls||""));const pw=el("div","pwrap");const sp=el("div","sprite");
-  sp.style.backgroundImage="url("+IMG[key]+")";if(key!=="irina")sp.classList.add("px");sp.style.backgroundPositionX=(EI[e]/11*100)+"%";
+  sp.style.backgroundImage="url("+IMG[key]+")";if(key!=="irina")sp.classList.add("px");sp.style.backgroundPositionX=((typeof e==="number"?e:EI[e])/11*100)+"%";
   const fx=el("div","fx");pw.append(sp,fx);shop.append(pw);fxSet(e==="joy"||e===0?"joy":e===1?"interest":e===2?"doubt":"angry",fx);return shop}
 function heroAnim(sp){let f=0;const t=setInterval(()=>{if(!document.contains(sp)){clearInterval(t);return}
   f++;const m=f%12;sp.style.backgroundPositionX=((m===5?9:(m===8||m===9)?5:1)/11*100)+"%"},330)}
 let selId=heroOf(store("lavka_last"));if(!HEROES.some(x=>x.hero===selId))selId="ivan";
 function screenStart(){
-  stopTimer();
+  stopTimer();stFlush();
   $("#modeChip").hidden=true;
   const hist=histLoad();
   const w=el("div","start");
@@ -2295,7 +2345,7 @@ function screenBrief(){
   const ul=el("ul","rules");
   ["Ваша цель: довести гостью до покупки и дать ей хорошие эмоции.","Говорите как друг, на равных, без стандартных фраз.","Спрашивайте открыто, слушайте, копите факты в блокноте.","Про аллергию спросите вовремя: у самого гостя и у тех, для кого покупка."].forEach(t=>ul.append(el("li",null,t)));
   c.append(ul);
-  const go=el("button","btn red","Войти в лавку");go.type="button";go.onclick=()=>{fresh();screenGame()};c.append(go);
+  const go=el("button","btn red","Войти в лавку");go.type="button";go.onclick=()=>{const run=()=>{fresh();screenGame()};if(mode==="exam"&&STATS_URL&&!EXOK)screenExamGate(run);else run()};c.append(go);
   mount(c);
 }
 
@@ -2606,6 +2656,7 @@ const BI={mac6:"it_macarons",kidsMini:"it_kids",kidsCookie:"it_cookies",banana:"
   let only=false;
   flt.onclick=()=>{only=!only;list.querySelectorAll(".it").forEach(x=>{x.hidden=only&&x.dataset.ok==="1"});flt.textContent=only?"Показать все ответы":"Показать только ошибки"};
   lg.append(list);w.append(lg);
+  if(mode==="exam"&&STATS_URL&&EXOK){stBox(w,{id:Date.now().toString(36)+Math.random().toString(36).slice(2,7),a:"result",code:EXC,fio:stJ("lavka_fio",""),t:new Date().toISOString(),hero:SC.nm,sc:SC.badge||SC.id,L:L,score:crit?null:score,mood:Math.round(S.mood),nps:nps,crit:S.crit?(SC.CRIT&&SC.CRIT[S.crit]||String(S.crit)):"",total:bought?total:0,dur:Math.round((Date.now()-S.t0)/1000),mist:S.hist.filter(h=>h.grade==="bad"||h.grade==="crit").length,st:S.hist.map(h=>h.stage+": "+GL[h.grade]+(h.grade!=="crit"?" ("+(h.d>0?"+":"")+h.d+")":"")+(h.timeout?" [время вышло]":""))})}
   const act=el("div","actions");
   const again=el("button","btn red","Пройти ещё раз");again.type="button";again.onclick=()=>screenBrief();
   const other=el("button","btn ghost","Другой гость");other.type="button";other.onclick=screenStart;
