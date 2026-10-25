@@ -2476,6 +2476,7 @@ function showNode(){
   const pr=el("div","progress");const pi=document.createElement("i");pi.style.width=((S.idx)/ORDER.length*100)+"%";pr.append(pi);
   dlg.append(st,pr);
   if(mode==="train"&&STAGE_HINT[N.stage])dlg.append(el("p","stagehint","Подсказка этапа: "+STAGE_HINT[N.stage]));
+  if(mode==="exam"&&S.pend){dlg.append(guestBubble(S.pend));S.pend=null}
   const line=N.line(S);
   if(N.narr){dlg.append(el("div","bubble narr",line));say(null)}else{say(line);const gb=guestBubble(line);gb.classList.add("mobonly");dlg.append(gb)}
   dlg.append(el("p","hint","Что вы ответите "+SC.dat.replace(/ы$/,"ы")+"?"));
@@ -2517,7 +2518,7 @@ function choose(i){
   if(o.g==="crit"){S.crit=o0.crit}else setMood(S.mood+d);
   S.hist.push({node:id,stage:N.stage,said:o0.t,grade:o.g,d:d,why:o.w,attempt});
   if(o.g==="crit"){setMood(0)}
-  showReaction(o0,o,i,attempt);
+  if(mode==="exam"){S.pend=(o.g!=="crit"&&o.r)?o.r:null;setFace(S.mood);afterReaction(o0,o,i,attempt)}else showReaction(o0,o,i,attempt);
 }
 
 function showReaction(o0,o,i,attempt){
