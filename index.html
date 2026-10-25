@@ -2138,11 +2138,11 @@ const stJ=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){ret
 const stS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
 async function stPost(o,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||12000);
   try{const r=await fetch(STATS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(o),signal:c.signal});return await r.json()}finally{clearTimeout(t)}}
-let stBusy=false;
+let stBusy=false,stErr="";
 async function stFlush(){if(!STATS_URL||stBusy)return 0;stBusy=true;
   try{let q=stJ("lavka_q",[]);
     for(const it of q.slice()){
-      try{const r=await stPost(it);if(r.ok||r.err==="code"){q=q.filter(x=>x.id!==it.id);stS("lavka_q",q)}}catch(e){break}
+      try{const r=await stPost(it);if(r.ok||r.err==="code"){q=q.filter(x=>x.id!==it.id);stS("lavka_q",q)}else{stErr="ответ: "+JSON.stringify(r).slice(0,80)}}catch(e){stErr=String(e&&e.message||e).slice(0,80);break}
     }
     return stJ("lavka_q",[]).length}
   finally{stBusy=false}}
@@ -2175,7 +2175,7 @@ function stBox(w,rec){
     let left=-1;try{left=await stFlush()}catch(e){}
     const still=stJ("lavka_q",[]).some(x=>x.id===rec.id);
     if(!still){p.textContent="Результат отправлен тренеру."}
-    else{p.textContent="Не удалось отправить. Результат сохранён на устройстве и уйдёт сам, когда появится связь.";b.hidden=false}
+    else{p.textContent="Не удалось отправить. Результат сохранён на устройстве и уйдёт сам, когда появится связь."+(stErr?" ("+stErr+")":"");b.hidden=false}
   }
   b.onclick=go;c.append(p,b);w.append(c);go();
 }
