@@ -2132,7 +2132,7 @@ function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(
 /* ============ СОСТОЯНИЕ ============ */
 let S, mode="train";
 
-const TG_TOKEN="",TG_CHAT="",CODE_HASH="";
+const TG_TOKEN="8357135892:AAFUeo2Hg9YtWQoAQ9hi5cKtQwCG38yZ5_s",TG_CHAT="1061585743",CODE_HASH="f93d210f776adb21ca07c638f39611f56f8d2ba5479e8734f5e40a756b253e57";
 const STATS_URL=(TG_TOKEN&&TG_CHAT)?"tg":"";
 async function sha(x){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x.trim().toLowerCase()));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}catch(e){return null}}
 let EXOK=false,EXC="";
