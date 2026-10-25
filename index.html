@@ -2132,7 +2132,7 @@ function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(
 /* ============ СОСТОЯНИЕ ============ */
 let S, mode="train";
 
-const STATS_URL="";
+const STATS_URL="https://script.google.com/macros/s/AKfycbwSDnw2Gqvq-YRb3dt7ZF7QNXF58KpIGpOfsO7nEWIV7DrQEY41ErcrOdvQ9n4LLMMa/exec";
 let EXOK=false,EXC="";
 const stJ=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const stS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
