@@ -2132,12 +2132,19 @@ function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(
 /* ============ СОСТОЯНИЕ ============ */
 let S, mode="train";
 
-const STATS_URL="https://script.google.com/macros/s/AKfycbwSDnw2Gqvq-YRb3dt7ZF7QNXF58KpIGpOfsO7nEWIV7DrQEY41ErcrOdvQ9n4LLMMa/exec";
+const TG_TOKEN="",TG_CHAT="",CODE_HASH="";
+const STATS_URL=(TG_TOKEN&&TG_CHAT)?"tg":"";
+async function sha(x){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x.trim().toLowerCase()));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}catch(e){return null}}
 let EXOK=false,EXC="";
 const stJ=(k,d)=>{try{return JSON.parse(localStorage.getItem(k))||d}catch(e){return d}};
 const stS=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}};
-async function stPost(o,ms){const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||12000);
-  try{const r=await fetch(STATS_URL,{method:"POST",headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(o),signal:c.signal});return await r.json()}finally{clearTimeout(t)}}
+async function stPost(o,ms){
+  if(o.a==="check"){const h=await sha(o.code);return {ok:h===null||h===CODE_HASH,err:"code"}}
+  const st=(o.st||[]).join("\n");
+  let tx="Экзамен «Гость в лавке»\nСотрудник: "+o.fio+"\nГость: "+o.hero+" ("+o.sc+")\nОценка: "+o.L+(o.score==null?"":", баллы "+o.score+" из 100")+"\nНастроение: "+o.mood+", желание вернуться: "+o.nps+" из 10\nПокупка: "+(o.total?o.total+" ₽":"нет")+"\nКритичная ошибка: "+(o.crit||"нет")+"\nОшибок: "+o.mist+", время: "+Math.floor(o.dur/60)+" мин "+o.dur%60+" с\n\nРазбор по этапам:\n"+st;
+  tx=tx.slice(0,3900);
+  const c=new AbortController(),t=setTimeout(()=>c.abort(),ms||12000);
+  try{const r=await fetch("https://api.telegram.org/bot"+TG_TOKEN+"/sendMessage",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({chat_id:TG_CHAT,text:tx}),signal:c.signal});const j=await r.json();if(!j.ok)throw new Error("Telegram: "+(j.description||r.status));return {ok:true}}finally{clearTimeout(t)}}
 let stBusy=false,stErr="";
 async function stFlush(){if(!STATS_URL||stBusy)return 0;stBusy=true;
   try{let q=stJ("lavka_q",[]);
