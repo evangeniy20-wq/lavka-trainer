@@ -353,6 +353,14 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
 .stin:focus{outline:3px solid #e0a63a}
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 html,body{touch-action:manipulation;-webkit-touch-callout:none}
+.notes{position:fixed;left:0;right:0;top:0;bottom:0;z-index:70;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(8,10,18,.74);border:0;box-shadow:none;max-height:none;overflow:auto}
+.notes[hidden]{display:none}
+.npanel{width:100%;max-width:520px;max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);overflow:auto;background:var(--paper);border:3px solid var(--ink);box-shadow:inset 0 0 0 3px var(--brass),5px 5px 0 var(--ink);padding:6px 0 14px;display:flex;flex-direction:column;gap:6px}
+.nhead{display:flex;align-items:center;justify-content:space-between;padding-right:10px}
+.nclose{width:40px;height:40px;font-size:26px;line-height:1;border:3px solid var(--ink);background:#fff;cursor:pointer;flex:none}
+.npanel li{font-size:16px}
+.npanel li small{font-size:13px}
+.npanel>.btn{margin:4px 12px 0}
 </style>
 </head>
 <body>
@@ -2271,7 +2279,7 @@ function sfx(n){SND.play(n)}
 
 /* ============ ЭКРАНЫ ============ */
 const app=$("#app");
-function mount(node){app.replaceChildren(node);window.scrollTo(0,0)}
+function mount(node){const nn=document.getElementById("notes");if(nn)nn.hidden=true;app.replaceChildren(node);window.scrollTo(0,0)}
 
 const TAGN={timeout:"Время на ответ вышло",stamp:"Штампы: «Вам помочь?», «что-нибудь ещё»",hedge:"Неуверенные слова: «мне кажется», «может быть»",push:"Давление ценой",list:"Перечисление ассортимента вместо вопросов",assume:"Догадки вместо вопросов",noallergy:"Аллергию не спросили",flat:"Общие слова без связи с запросом",cliche:"Банальный комплимент",flattery:"Лесть",stop:"Остановились без допродажи"};
 function histLoad(){const h=store("lavka_hist");return Array.isArray(h)?h.filter(r=>SCENS.some(x=>x.id===r.sc)):[]}
@@ -2374,7 +2382,7 @@ function screenGame(){
   const row=el("div","row");row.append(el("span",null,"Настроение гостьи"),el("b",null,"50"));row.lastChild.id="moodNum";
   const hs=el("div","hearts");hs.id="hearts";for(let i=0;i<10;i++){const h=el("span","h");h.append(document.createElement("i"));hs.append(h)}
   mood.append(row,hs);sc.append(mood);
-  const nd=el("div","notes");nd.id="notes";nd.hidden=true;shop.append(nd);
+  document.querySelectorAll("#notes").forEach(x=>x.remove());const nd=el("div","notes");nd.id="notes";nd.hidden=true;document.body.append(nd);nd.onclick=ev=>{if(ev.target===nd)nd.hidden=true};
   const nb2=el("button","nbtn");nb2.id="nbtn";nb2.type="button";nb2.setAttribute("aria-label","Что я узнал");nb2.onclick=()=>{nd.hidden=!nd.hidden};shop.append(nb2);
   // диалог
   const dlg=el("section","card dialog");dlg.id="dlg";
@@ -2393,8 +2401,7 @@ function setMood(m,quiet){
 }
 function renderNotes(){
   const nd=$("#notes");if(!nd)return;
-  nd.replaceChildren();
-  nd.append(el("h4",null,"Что я узнал"));
+  nd.replaceChildren();const pn=el("div","npanel");const hd=el("div","nhead");hd.append(el("h4",null,"Что я узнал"));const cl=el("button","nclose","×");cl.type="button";cl.setAttribute("aria-label","Закрыть");cl.onclick=()=>{nd.hidden=true};hd.append(cl);pn.append(hd);nd.append(pn);
   const ul=document.createElement("ul");
   FACT_SLOTS.forEach(f=>{
     const got=S.facts[f.k];
@@ -2403,7 +2410,7 @@ function renderNotes(){
     li.append(lab,el("span",null,got?f.txt:"пока неизвестно"));
     ul.append(li);
   });
-  nd.append(ul);
+  pn.append(ul);const cb=el("button","btn ghost","Закрыть");cb.type="button";cb.onclick=()=>{nd.hidden=true};pn.append(cb);
   const nbt=$("#nbtn");if(nbt){const c=FACT_SLOTS.filter(f=>S.facts[f.k]).length;nbt.replaceChildren();if(c){const b=document.createElement("b");b.textContent=c;nbt.append(b)}}
 }
 
@@ -2713,6 +2720,7 @@ screenStart();
  document.addEventListener("touchmove",e=>{if(e.touches.length>1||(e.scale&&e.scale!==1))e.preventDefault()},{passive:false});
  document.addEventListener("dblclick",e=>{if(!/^(INPUT|TEXTAREA)$/.test(e.target.tagName))e.preventDefault()},{passive:false});
 })();
+document.addEventListener("keydown",e=>{if(e.key==="Escape"){const n=document.getElementById("notes");if(n)n.hidden=true}});
 </script>
 </body>
 </html>
