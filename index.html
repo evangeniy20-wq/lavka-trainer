@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <title>Гость в лавке</title>
 <meta name="robots" content="noindex">
 <style>
@@ -351,6 +351,8 @@ th{font-family:var(--pix);text-transform:uppercase;font-size:12px}
 .it[hidden]{display:none}
 .stin{width:100%;box-sizing:border-box;padding:12px 14px;font:inherit;font-size:16px;border:2px solid #3a2a1c;border-radius:8px;background:#fff8ea;color:#2b1d12}
 .stin:focus{outline:3px solid #e0a63a}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{touch-action:manipulation;-webkit-touch-callout:none}
 </style>
 </head>
 <body>
@@ -2132,7 +2134,7 @@ function store(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(
 /* ============ СОСТОЯНИЕ ============ */
 let S, mode="train";
 
-const TG_TOKEN="8357135892:AAFUeo2Hg9YtWQoAQ9hi5cKtQwCG38yZ5_s",TG_CHAT="1061585743",CODE_HASH="f93d210f776adb21ca07c638f39611f56f8d2ba5479e8734f5e40a756b253e57";
+const TG_TOKEN="8357135892:AAFUeo2Hg9YtWQoAQ9hi5cKtQwCG38yZ5_s",TG_CHAT="1061585743",CODE_HASH="1153f7d5b172f9d6f7724dd8ec80076eeeabd44716cbc8bbcfcc8a0531599d74";
 const STATS_URL=(TG_TOKEN&&TG_CHAT)?"tg":"";
 async function sha(x){try{const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(x.trim().toLowerCase()));return [...new Uint8Array(b)].map(v=>v.toString(16).padStart(2,"0")).join("")}catch(e){return null}}
 let EXOK=false,EXC="";
@@ -2704,6 +2706,12 @@ screenStart();
  new MutationObserver(sched).observe(document.body,{childList:true,subtree:true});
  addEventListener("resize",sched);addEventListener("orientationchange",sched);
  sched();
+})();
+(function(){
+ const no=e=>e.preventDefault();
+ ["gesturestart","gesturechange","gestureend"].forEach(n=>document.addEventListener(n,no,{passive:false}));
+ document.addEventListener("touchmove",e=>{if(e.touches.length>1||(e.scale&&e.scale!==1))e.preventDefault()},{passive:false});
+ document.addEventListener("dblclick",e=>{if(!/^(INPUT|TEXTAREA)$/.test(e.target.tagName))e.preventDefault()},{passive:false});
 })();
 </script>
 </body>
