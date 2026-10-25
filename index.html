@@ -2383,7 +2383,7 @@ function screenGame(){
   const hs=el("div","hearts");hs.id="hearts";for(let i=0;i<10;i++){const h=el("span","h");h.append(document.createElement("i"));hs.append(h)}
   mood.append(row,hs);sc.append(mood);
   document.querySelectorAll("#notes").forEach(x=>x.remove());const nd=el("div","notes");nd.id="notes";nd.hidden=true;document.body.append(nd);nd.onclick=ev=>{if(ev.target===nd)nd.hidden=true};
-  const nb2=el("button","nbtn");nb2.id="nbtn";nb2.type="button";nb2.setAttribute("aria-label","Что я узнал");nb2.onclick=()=>{nd.hidden=!nd.hidden};shop.append(nb2);
+  const nb2=el("button","nbtn");nb2.id="nbtn";nb2.type="button";nb2.setAttribute("aria-label","Что я узнал");nb2.onclick=()=>{nd.hidden=!nd.hidden};if(mode==="train")shop.append(nb2);
   // диалог
   const dlg=el("section","card dialog");dlg.id="dlg";
   g.append(sc,dlg);mount(g);
@@ -2401,7 +2401,7 @@ function setMood(m,quiet){
 }
 function renderNotes(){
   const nd=$("#notes");if(!nd)return;
-  nd.replaceChildren();const pn=el("div","npanel");const hd=el("div","nhead");hd.append(el("h4",null,"Что я узнал"));const cl=el("button","nclose","×");cl.type="button";cl.setAttribute("aria-label","Закрыть");cl.onclick=()=>{nd.hidden=true};hd.append(cl);pn.append(hd);nd.append(pn);
+  nd.replaceChildren();const pn=el("div","npanel");const hd=el("div","nhead");hd.append(el("h4",null,"Что я узнал"));const cl=el("button","nclose","×");cl.type="button";cl.setAttribute("aria-label","Закрыть");cl.onclick=()=>{nd.hidden=true};pn.append(hd);nd.append(pn);
   const ul=document.createElement("ul");
   FACT_SLOTS.forEach(f=>{
     const got=S.facts[f.k];
@@ -2548,7 +2548,7 @@ function showReaction(o0,o,i,attempt){
 function afterReaction(o0,o,i,attempt){
   const id=S.node;
   if(o.g==="crit"){return screenEnd()}
-  if(o.g==="bad"&&attempt===0){
+  if(o.g==="bad"&&attempt===0&&mode==="train"){
     // ремонтный ход: тот же узел ещё раз, выбранный вариант недоступен
     S.retry[id]=1;(S.disabled[id]=S.disabled[id]||new Set()).add(i);
     S.last=null;return showNode();
